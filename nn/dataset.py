@@ -39,7 +39,7 @@ class RayleighDataset(Dataset):
                 s[['vs1', 'vs2', 'den1', 'den2', 'h1']].iloc[0].values,
                 dtype=torch.float32
             )
-            label = normalize-label(label)
+            label = normalize_label(label)
             self.curves.append(curve)
             self.labels.append(label)
 

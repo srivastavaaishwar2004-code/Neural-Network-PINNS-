@@ -1,5 +1,5 @@
 import torch 
-from surrogate import SurrogateNet
+from nn.surrogate import SurrogateNet
 
 def load_surrogate(path='inversion_model/saved_weights/surrogate.pt'):
 
