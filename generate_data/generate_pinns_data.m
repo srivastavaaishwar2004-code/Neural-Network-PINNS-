@@ -1,64 +1,65 @@
-clc;clear;
+5clc; clear;
 project_root = fileparts(pwd);
+addpath(genpath(project_root));
 
-N_samples = 100;
+N_samples = 100;  
 
+% Latin Hypercube Sampling over 5 independent parameters
+lhs      = lhsdesign(N_samples, 5);
+vs1_arr  = 150  + lhs(:,1) * 100;   % 150-250 m/s
+vs2_arr  = 300  + lhs(:,2) * 200;   % 300-500 m/s
+den1_arr = 1700 + lhs(:,3) * 200;   % 1700-1900 kg/m3
+den2_arr = 1900 + lhs(:,4) * 300;   % 1900-2200 kg/m3
+h1_arr   = 5    + lhs(:,5) * 20;    % 5-25 m
 
-lhs     = lhsdesign(N_samples, 5);
-vs1_arr = 150  + lhs(:,1)  * 100;
-vs2_arr = 300  + lhs(:,2)  * 200;
-den1_arr = 2000 + lhs(:,3) * 200;
-den2_arr = 2000 + lhs(:,4) * 300;
-h1_arr   = 5    + lhs(:,5)  * 20;
-
-fprint("Generating %d PINNs tarinig samples...\n", N_samples);
+fprintf('Generating %d PINNs training samples...\n', N_samples);
 results = cell(N_samples, 1);
 
-parfor s= 1:N_samples
-    fprint('\n=== Sample %d ===\n', s);
+parfor s = 1:N_samples
+    fprintf('\n=== Sample %d ===\n', s);
 
-    vs1 = vs1_arr(s);
-    vs2 = vs2_arr(s);
-    vp1 = 1.7 * vs1;
-    vp2 = 1.7 * vs2;
+    vs1  = vs1_arr(s);
+    vs2  = vs2_arr(s);
+    vp1  = 1.7 * vs1;
+    vp2  = 1.7 * vs2;
     den1 = den1_arr(s);
     den2 = den2_arr(s);
-    h1 = h1_arr(s);
+    h1   = h1_arr(s);
 
-    vp = [vp1 vp2];
-    vs = [vs1 vs2];
+    vp  = [vp1 vp2];
+    vs  = [vs1 vs2];
     den = [den1 den2];
-    h = [h1];
+    h   = [h1];
 
-    wmin = 1;
+    wwmin = 1;
     wwmax = 80;
 
-    [freq_clean, vr_clean] = two_layer_rayleigh_data_genartion_modified( ...
-        vp, vs, den, h, wmin, wwmax);
-    
+    [freq_clean, vr_clean] = two_layer_rayleigh_data_generation_modified( ...
+        vp, vs, den, h, wwmin, wwmax);
+
     if isempty(freq_clean)
-        warning('no root found for sample %d. skipping.' s);
+        warning('No roots found for sample %d. Skipping.', s);
         results{s} = [];
-        continue; 
+        continue;
     end
-    
-    nrow   = length(freq_clean);
-    sample_id = s * ones(nrow, 1);
-     
-    results{s} = [
-        sample_id, ...
-        freq_clean, ...
-        vr_clean, ...
-        vp1 * ones(nrow, 1), ...
-        vp2 * ones(nrow, 1), ...
-        vs1 * ones(nrow, 1), ...
-        vs2 * ones(nrow, 1), ...
-        den1 * ones(nrow, 1), ...
-        den2 * ones(nrow, 1), ...
-        h1 * ones(nrow, 1)];
+
+    nrows     = length(freq_clean);
+    sample_id = s * ones(nrows, 1);
+
+    results{s} = [ ...
+        sample_id            ...
+        freq_clean           ...
+        vr_clean             ...
+        vp1  * ones(nrows,1) ...
+        vp2  * ones(nrows,1) ...
+        vs1  * ones(nrows,1) ...
+        vs2  * ones(nrows,1) ...
+        den1 * ones(nrows,1) ...
+        den2 * ones(nrows,1) ...
+        h1   * ones(nrows,1)];
 end
 
-% Assemble 
+% Assemble
 ALL_DATA = [];
 for s = 1:N_samples
     if ~isempty(results{s})
@@ -66,8 +67,8 @@ for s = 1:N_samples
     end
 end
 
-% Ensure the outputdirectory exists 
-out_dir = 'inversion_model/data';
+% Ensure output directory exists  <-- the fix
+out_dir = 'invesion_model/data';
 if ~exist(out_dir, 'dir')
     mkdir(out_dir);
 end
@@ -75,9 +76,9 @@ end
 % Save
 header = {'sample_id','freq','Vr','vp1','vp2','vs1','vs2','den1','den2','h1'};
 
-writecell(ALL_DATA, out_dir, 'all_data.csv', 'writeheader', header,'Sheet',1,'Range', 'A1');
-writematrix(ALL_DATA, fullfile(out_dir, 'all_data.xlsx'), 'Sheet', 1, 'Range', 'A2');
-writematrix(ALL_DATA,fullfile(out_dir,'pinns_dataset.csv'));
+writecell(header,  fullfile(out_dir, 'pinns_dataset.xlsx'), 'Sheet', 1, 'Range', 'A1');
+writematrix(ALL_DATA, fullfile(out_dir, 'pinns_dataset.xlsx'), 'Sheet', 1, 'Range', 'A2');
+writematrix(ALL_DATA, fullfile(out_dir, 'pinns_dataset.csv'));
 
-fprintf('\nDataset generation completed successfully\n');
-fprintf('Total rows written %d\n',size(ALL_DATA,1));
+fprintf('\nDataset generation completed successfully!\n');
+fprintf('Total rows written: %d\n', size(ALL_DATA, 1));

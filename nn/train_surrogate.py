@@ -8,12 +8,12 @@ from surrogate import SurrogateNet
 from dataset import LABEL_MIN, LABEL_MAX, CURVE_MIN, CURVE_MAX
 
 # hyperparameters 
-DATA_PATH   = ''
+DATA_PATH   = 'inversion_model/data/pinns_dataset(2000).csv'
 BATCH_SIZE  = 64
 EPOCHS      = 500
 LR          = 0.001
 PATIENCE    = 50
-SAVE_PATH   = ''
+SAVE_PATH   = 'inversion_model/saved_weights/surrogate.pt'
 
 
 class SurrogateDataset(Dataset):
